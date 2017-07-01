@@ -7,34 +7,67 @@ import random
 class Player():
 
     def __init__(self, source):
-        self.source = source
+        """
+        This class represents player.
+        
+        Args:
+            * source : should be command that calls the bot in console
+        """
+        self.TARGET = 21
+        self.SOURCE = source
         self.role = False
         self.value = 0
         self.bettor_value = 0
         self.wins = 0
         self.penalty = 0
+
+    def testing_bot(self):
+        """
+        This function represent simple testing strategy.
+        It does the same thing (no matter if the role is dealer or bettor).
+        """
+        if self.value > 18:
+            return 0
+        elif self.value > 15:
+            return random.getrandbits(1)
+        else:
+            return 1
+        
+    def testing_bot2(self):
+        """
+        This function represent simple testing strategy.
+        It does the same thing (no matter if the role is dealer or bettor).
+        """
+        if self.value > 19:
+            return 0
+        elif self.value > 15:
+            return random.getrandbits(1)
+        else:
+            return 1
         
     def make_decision(self):
         """
-        This function obtain decision from AI script.
+        This function obtain decision from AI script or testing function.
         """
-        if TEST:
-            if self.value > 19:
-                return 0
-            elif self.value > 15:
-                return random.getrandbits(1)
-            else:
-                return 1
+        if self.SOURCE == "TEST1":
+            return self.testing_bot()
+        elif self.SOURCE == "TEST2":
+            return self.testing_bot2()
         else:
-            query = "{} {} {}".format(self.source,
+            # get response from AI
+            query = "{} {} {}".format(self.SOURCE,
                 self.bettor_value, self.value) 
             output = os.popen(query).read()
+            # handle response
             if not output:
+                # if empty answer
                 raise Exception("Empty bot output.")     
             answer = int(output.split("\n")[0])
             if answer in [0, 1]:
+                # pass the answer further
                 return(int(answer))
             else:
+                # if answer is not correct
                 raise Exception("Bot output {} is not 0 or 1.".format(answer))
             
     def roll_dice(self):
@@ -45,12 +78,19 @@ class Player():
         return random.randint(1,6)
  
     def estimate_penalty(self):
-        if self.value > 21:
+        """ 
+        This function measures penalty.
+        """
+        if self.value > self.TARGET:
             return 100
         else:
-            return 21 - self.value 
+            return self.TARGET - self.value 
         
     def play_round(self):
+        """
+        This function simulates one round of the player.
+        It rolls till AI script call stop.
+        """
         self.done = False
         self.value = 0
         # bettor game
@@ -59,7 +99,7 @@ class Player():
             if not self.value:
                 self.value += self.roll_dice()
             # other rolls
-            while self.value < 21 and not self.done:
+            while self.value < self.TARGET and not self.done:
                 decision = self.make_decision()
                 if decision == 0:
                     self.done = True
@@ -79,15 +119,14 @@ class Player():
                     self.value += self.roll_dice()
         # estimate penalty
         self.penalty = self.estimate_penalty()      
-   
-TEST = True
-VERBOSE = False
-        
+ 
 
-PLAYER1 = 'python3 bots/bot1.py'
-PLAYER2 = 'python3 bots/bot1.py'
+N = 10000    
+#PLAYER1 = 'python3 bots/bot1.py'
+#PLAYER2 = 'python3 bots/bot1.py'
+PLAYER1 = 'TEST1'
+PLAYER2 = 'TEST2'
 
-N = 10000
 
 p1 = Player(PLAYER1)
 p2 = Player(PLAYER2)
