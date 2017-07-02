@@ -14,6 +14,7 @@ class Player():
             * source : should be command that calls the bot in console
         """
         self.TARGET = 21
+        self.DEALER_STOP = 17
         self.SOURCE = source
         self.role = False
         self.value = 0
@@ -26,12 +27,16 @@ class Player():
         This function represent simple testing strategy.
         It does the same thing (no matter if the role is dealer or bettor).
         """
-        if self.value > 18:
-            return 0
-        elif self.value > 15:
-            return random.getrandbits(1)
+        if self.role == "B":
+            if self.value > 17:
+                return 0
+            else:
+                return 1
         else:
-            return 1
+            if self.value < self.bettor_value:
+                return 1
+            else:
+                return 0
         
     def testing_bot2(self):
         """
@@ -40,8 +45,8 @@ class Player():
         """
         if self.value > 19:
             return 0
-        elif self.value > 15:
-            return random.getrandbits(1)
+#        elif self.value > 15:
+#            return random.getrandbits(1)
         else:
             return 1
         
@@ -111,7 +116,7 @@ class Player():
             if not self.value:
                 self.value += self.roll_dice()
             # other rolls
-            while self.value < 17 and not self.done:
+            while self.value < self.DEALER_STOP and not self.done:
                 decision = self.make_decision()
                 if decision == 0:
                     self.done = True
@@ -125,8 +130,11 @@ N = 10000
 #PLAYER1 = 'python3 bots/bot1.py'
 #PLAYER2 = 'python3 bots/bot1.py'
 PLAYER1 = 'TEST1'
-PLAYER2 = 'TEST2'
+PLAYER2 = 'TEST1'
 
+
+#diffs = []
+#for game in range(100):
 
 p1 = Player(PLAYER1)
 p2 = Player(PLAYER2)
@@ -146,23 +154,40 @@ for rnd in range(N):
         p2.wins += 1
         winner = "P2"
     
-## player1 is bettor
-p1.role = "D"
-p2.role = "B"
-for rnd in range(N):
-    p2.play_round()
-    p1.bettor_value = p2.value
-    p1.play_round()
-    # decide winner
-    if p2.penalty < p1.penalty:
-        p2.wins += 1
-        winner = "P2"
-    else:
-        p1.wins += 1
-        winner = "P1"
+### player2 is bettor
+#p1.role = "D"
+#p2.role = "B"
+#for rnd in range(N):
+#    p2.play_round()
+#    p1.bettor_value = p2.value
+#    p1.play_round()
+#    # decide winner
+#    if p2.penalty < p1.penalty:
+#        p2.wins += 1
+#        winner = "P2"
+#    else:
+#        p1.wins += 1
+#        winner = "P1"
    
 # output results  
 print(p1.wins, p2.wins)
+
+
+
+
+
+
+#    diff = (p1.wins-p2.wins)
+    
+#    print(diff)
+#    diffs.append(diff)
+
+#import numpy as np
+
+
+#print(np.mean(diffs), np.std(diffs))
+
+
 
 
 
