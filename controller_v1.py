@@ -28,7 +28,7 @@ class Player():
         It does the same thing (no matter if the role is dealer or bettor).
         """
         if self.role == "B":
-            if self.value > 17:
+            if self.value >= 19:
                 return 0
             else:
                 return 1
