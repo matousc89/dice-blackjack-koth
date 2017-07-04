@@ -15,94 +15,60 @@ class Player():
         """
         self.NAME = name
         self.TARGET = 21
+        self.MAX_BET = 5
         self.SOURCE = source
         self.value = 0
         self.wins = 0
         self.penalty = 0
-        self.money = n * 5
+        self.money = n * self.MAX_BET
         self.rolls_count = 1
-
-    def testing_bot1(self, argv):
-        """
-        This function represent simple testing strategy.
-        """
-        TASK = argv[0]
-        ROLE = argv[1]
-        VALUE = int(argv[2])
-        if TASK == "PLACE":   
-            MY_COUNT = int(argv[3])
-            OP_COUNT = int(argv[4])
-            # decide how much bet as bettor  
-            return max(1, 21-VALUE)            
-        if TASK == "ANSWER":
-            MY_COUNT = int(argv[3])
-            OP_COUNT = int(argv[4])
-            OP_BET = int(argv[5])
-            # decide whether to accept the bet or not
-            acceptable = max(1, 21-VALUE) 
-            return 1 if acceptable >= OP_BET else 0 
-        elif TASK == "ROLL":   
-            # decide whether to roll or not     
-            if VALUE >= 18:
-                return 0
-            else:
-                return 1
-        
-    def testing_bot2(self, argv):
-        """
-        This function represent simple testing strategy.
-        """
-        TASK = argv[0]
-        ROLE = argv[1]
-        VALUE = int(argv[2])
-        if TASK == "PLACE":   
-            MY_COUNT = int(argv[3])
-            OP_COUNT = int(argv[4])
-            # decide how much bet as bettor  
-            return max(5, 21-VALUE)            
-        if TASK == "ANSWER":
-            MY_COUNT = int(argv[3])
-            OP_COUNT = int(argv[4])
-            OP_BET = int(argv[5])
-            # decide whether to accept the bet or not
-            acceptable = max(1, 21-VALUE) 
-            return 1 if acceptable >= OP_BET else 0 
-        elif TASK == "ROLL":   
-            # decide whether to roll or not     
-            if VALUE >= 17:
-                return 0
-            else:
-                return 1
         
     def place_bet(self, role, oponent_count):
+        """
+        This function contact the bettor to get the demanded bet.
+        Bet must be an integer in allowed range.
+        """
         args = [
-                "PLACE", role, self.value, self.rolls_count, oponent_count
+                "PLACE", self.value, self.rolls_count, oponent_count
                 ]
         # testing bot 1
         if self.SOURCE == "TEST1":
-            return self.testing_bot1(args)
+            bet = self.testing_bot1(args)
         # testing bot 2
-        if self.SOURCE == "TEST2":
-            return self.testing_bot2(args)
+        elif self.SOURCE == "TEST2":
+            bet = self.testing_bot2(args)
+        # check if the bet is valid
+        bet = int(bet)
+        if 0 <= bet <= self.MAX_BET:
+            return bet
+        else:
+            raise Exception("The place bet get invalid answer.")
 
     def answer_bet(self, role, oponent_count, oponent_bet):
         args = [
-                "ANSWER", role, self.value, self.rolls_count, oponent_count,
+                "ANSWER", self.value, self.rolls_count, oponent_count,
                 oponent_bet
                 ]
         # testing bot 1
         if self.SOURCE == "TEST1":
-            return self.testing_bot1(args)
+            answer = self.testing_bot1(args)
         # testing bot 2
         if self.SOURCE == "TEST2":
-            return self.testing_bot2(args)
+            answer = self.testing_bot2(args)
+        # check if the answer is valid
+        answer = int(answer)
+        if answer in [0, 1]:
+            return answer
+        else:
+            raise Exception("The answer for bet must be integer 0 or 1.")
+
 
     def make_decision(self, role):
         """
         This function obtain decision from AI script or testing function.
         """
         args = [
-            "ROLL", role, self.value
+            "ROLL", self.value, role
             ]
         # testing bot 1
         if self.SOURCE == "TEST1":
@@ -167,6 +133,58 @@ class Player():
                 self.rolls_count += 1
                 self.value += self.roll_dice()
            
+    def testing_bot1(self, argv):
+        """
+        This function represent simple testing strategy.
+        """
+        TASK = argv[0]
+        VALUE = int(argv[1])
+        if TASK == "PLACE":   
+            MY_COUNT = int(argv[2])
+            OP_COUNT = int(argv[3])
+            # decide how much bet as bettor  
+            return max(1, 21-VALUE)            
+        if TASK == "ANSWER":
+            MY_COUNT = int(argv[2])
+            OP_COUNT = int(argv[3])
+            OP_BET = int(argv[4])
+            # decide whether to accept the bet or not
+            acceptable = max(1, 21-VALUE) 
+            return 1 if acceptable >= OP_BET else 0 
+        elif TASK == "ROLL":
+            ROLE = argv[1]   
+            # decide whether to roll or not     
+            if VALUE >= 18:
+                return 0
+            else:
+                return 1
+        
+    def testing_bot2(self, argv):
+        """
+        This function represent simple testing strategy.
+        """
+        TASK = argv[0]
+        VALUE = int(argv[1])
+        if TASK == "PLACE":   
+            MY_COUNT = int(argv[2])
+            OP_COUNT = int(argv[3])
+            # decide how much bet as bettor  
+            return max(1, 21-VALUE)            
+        if TASK == "ANSWER":
+            MY_COUNT = int(argv[2])
+            OP_COUNT = int(argv[3])
+            OP_BET = int(argv[4])
+            # decide whether to accept the bet or not
+            acceptable = max(1, 21-VALUE) 
+            return 1 if acceptable >= OP_BET else 0 
+        elif TASK == "ROLL":
+            ROLE = argv[1]   
+            # decide whether to roll or not     
+            if VALUE >= 18:
+                return 0
+            else:
+                return 1
+
  
 def game_round(dealer, bettor):
     # play
