@@ -1,5 +1,6 @@
 from __future__ import print_function
 import os
+import sys
 import random
 
 #a = os.popen('java bot2 1 2').read()
@@ -30,8 +31,8 @@ class Player():
         Bet must be an integer in allowed range.
         """
         args = [
-                "PLACE", self.value, self.LOG, oponent_log, self.rolls_count,
-                oponent_count
+                "PLACE", str(self.value), self.LOG, oponent_log,
+                str(self.rolls_count), str(oponent_count)
                 ]
         # testing bot 1
         if self.SOURCE == "TEST1":
@@ -39,24 +40,35 @@ class Player():
         # testing bot 2
         elif self.SOURCE == "TEST2":
             bet = self.testing_bot2(args)
+        # AI script
+        else:
+            # get response from AI
+            query = self.SOURCE + " " + " ".join(args)
+            bet = int(os.popen(query).read())
         # check if the bet is valid
         bet = int(bet)
         if 0 <= bet <= self.MAX_BET:
             return bet
         else:
-            raise Exception("The place bet get invalid answer.")
+            raise Exception(str(bet) + " - is not valid bet.")
 
     def answer_bet(self, role, oponent_log, oponent_count, oponent_bet):
         args = [
-                "ANSWER", self.value, self.LOG, oponent_log, self.rolls_count,
-                oponent_count, oponent_bet
+                "ANSWER", str(self.value), self.LOG, oponent_log, 
+                str(self.rolls_count),
+                str(oponent_count), str(oponent_bet)
                 ]
         # testing bot 1
         if self.SOURCE == "TEST1":
             answer = self.testing_bot1(args)
         # testing bot 2
-        if self.SOURCE == "TEST2":
+        elif self.SOURCE == "TEST2":
             answer = self.testing_bot2(args)
+        # AI script
+        else:
+            # get response from AI
+            query = self.SOURCE + " " + " ".join(args)
+            answer = int(os.popen(query).read())
         # check if the answer is valid
         answer = int(answer)
         if answer in [0, 1]:
@@ -70,35 +82,30 @@ class Player():
         This function obtain decision from AI script or testing function.
         """
         args = [
-            "ROLL", self.value, self.LOG, oponent_log, role
+            "ROLL", str(self.value), self.LOG, oponent_log, role
             ]
         # testing bot 1
         if self.SOURCE == "TEST1":
-            return int(self.testing_bot1(args))
+            answer = int(self.testing_bot1(args))
         # testing bot 2
-        if self.SOURCE == "TEST2":
-            return int(self.testing_bot2(args))
-            
-            
-#        elif self.SOURCE == "TEST2":
-#            return self.testing_bot2()
-#        else:
-#            # get response from AI
-#            query = "{} {} {}".format(self.SOURCE,
-#                self.bettor_value, self.value) 
-#            output = os.popen(query).read()
-#            # handle response
-#            if not output:
-#                # if empty answer
-#                raise Exception("Empty bot output.")     
-#            answer = int(output.split("\n")[0])
-#            if answer in [0, 1]:
-#                # pass the answer further
-#                return(int(answer))
-#            else:
-#                # if answer is not correct
-#                raise Exception("Bot output {} is not 0 or 1.".format(answer))
-            
+        elif self.SOURCE == "TEST2":
+            answer = int(self.testing_bot2(args))       
+        # AI script
+        else:
+            # get response from AI
+            query = self.SOURCE + " " + " ".join(args)
+            answer = os.popen(query).read()
+            try:
+                answer = int(answer)
+            except:
+                raise Exception(str(answer) + " - is not convertible to integer.")
+        # check if the answer is valid
+        answer = int(answer)
+        if answer in [0, 1]:
+            return answer
+        else:
+            raise Exception("The answer for bet must be integer 0 or 1.")
+  
     def roll_dice(self):
         """
         This function simulate a roll of fair six-sided dice.
@@ -217,19 +224,25 @@ def game_round(dealer, bettor):
         return "P"
                 
 
+# python3 controller.py 'python3 bots/bot1.py' 'python3 bots/bot2.py'
 
+# assing robots
+if len(sys.argv) == 3:
+    PLAYER1 = sys.argv[1]
+    PLAYER2 = sys.argv[2]
+else:
+    PLAYER1 = 'TEST1'
+    PLAYER2 = 'TEST2'
+
+# number of rounds
 N = 10
-#PLAYER1 = 'python3 bots/bot1.py'
-#PLAYER2 = 'python3 bots/bot1.py'
-PLAYER1 = 'TEST1'
-PLAYER2 = 'TEST2'
 
-
+# create player instances (sources, names, log files, number of rounds)
 p1 = Player(PLAYER1, "P1", "log_p1.log", N)
 p2 = Player(PLAYER2, "P2", "log_p2.log", N)
 
-
-for path in ["log_p1.log", "log_p2.log"]:
+# clear logs
+for path in [p1.LOG, p2.LOG]:
     f = open(path, "w")
     f.close()
 
@@ -247,8 +260,6 @@ for rnd in range(N):
         linep1 = ["D", str("P" if res == "P" else 1 if res == "D" else 0),
             str(p1.rolls_count), str(p1.value)]
     
-    print("P"+str(rnd % 2 + 1), "\t", res, "\t", p1.value, p2.value, "\t", "\t", p1.money, p2.money)
-    
     f = open(p1.LOG, "a")
     f.write("\t".join(linep1)+"\n")
     f.close()
@@ -257,6 +268,7 @@ for rnd in range(N):
     f.write("\t".join(linep2)+"\n")
     f.close()
 
+print(p1.money, p2.money)
             
 
 
